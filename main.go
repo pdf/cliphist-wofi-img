@@ -6,10 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 const tmpDir = `/tmp/cliphist`
+
+var imgRegexp = regexp.MustCompile(`^\[\[ binary.*\b(?P<ext>jpg|jpeg|png|bmp)\b`)
 
 func main() {
 	if len(os.Args) != 2 {
@@ -25,7 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if strings.Index(split[1], `binary data image/`) != 0 {
+	matches := imgRegexp.FindStringSubmatch(split[1])
+	if len(matches) < 2 {
 		fmt.Println(input)
 		os.Exit(1)
 	}
@@ -44,7 +48,7 @@ func main() {
 
 	cmd := exec.Command(`cliphist`, `decode`)
 
-	suffix := split[1][strings.IndexRune(split[1], '/')+1:]
+	suffix := matches[1]
 	imgPath := filepath.Join(tmpDir, split[0]+`.`+suffix)
 	f, err := os.Create(imgPath)
 	if err != nil {
@@ -83,6 +87,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	//fmt.Println(split[0] + "\t" + `img:` + imgPath + `:text:` + input)
 	fmt.Println(`img:` + imgPath + `:text:` + input)
 }
