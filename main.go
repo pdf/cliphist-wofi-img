@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const tmpDir = `/tmp/cliphist`
+const tmpDir = `/tmp/cliphist-wofi-img`
 
 var imgRegexp = regexp.MustCompile(`^\[\[ binary.*\b(?P<ext>jpg|jpeg|png|bmp)\b`)
 
@@ -24,14 +24,16 @@ func main() {
 	split := strings.SplitN(input, "\t", 2)
 
 	if len(split) != 2 {
+		fmt.Fprintf(os.Stderr, "Incorrect number of fields (wanted 2): got %d\n", len(split))
 		fmt.Println(input)
 		os.Exit(1)
 	}
 
 	matches := imgRegexp.FindStringSubmatch(split[1])
 	if len(matches) < 2 {
+		fmt.Fprintln(os.Stderr, "Image not found, exiting")
 		fmt.Println(input)
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	if err := os.RemoveAll(tmpDir); err != nil {
@@ -40,7 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := os.Mkdir(tmpDir, 0700); err != nil {
+	if err := os.MkdirAll(tmpDir, 0o700); err != nil {
 		fmt.Fprintln(os.Stderr, `Failed creating tmp dir:`, err)
 		fmt.Println(input)
 		os.Exit(1)
